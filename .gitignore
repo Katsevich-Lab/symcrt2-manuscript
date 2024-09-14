@@ -1,0 +1,17 @@
+*.log
+code/.nextflow/
+.nextflow/
+.nextflow.log*
+.Rproj.user
+code/nextflow.config
+.Rprofile
+.DS_Store
+*.DS_Store
+*.code-workspace
+*.xml
+*.gz
+*.out
+*.aux
+*.bbl
+*-blx.bib
+*.blg
