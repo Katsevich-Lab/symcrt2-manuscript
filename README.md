@@ -1,12 +1,14 @@
-Reproducing the simulations and real data analysis reported in \`Doubly
+Reproducing the simulations and real data analysis reported in "Doubly
 robust and computationally efficient high-dimensional variable
-selection’
+selection"
 ================
 Abhinav Chakraborty, Jeffrey Zhang, Eugene Katsevich
 
 This repository contains code to reproduce the analyses reported in the
 paper “Doubly robust and computationally efficient high-dimensional
-variable selection” (arXiv, 2024).
+variable selection” ([arXiv](https://arxiv.org/abs/2409.09512), 2024). 
+
+**Note:** These analyses were computationally intensive, and involved orchestration of parallel jobs on a high-performance cluster (HPC) via [Nextflow](https://nextflow.io/). Therefore, reproduction of our results will also require both HPC and Nextflow.
 
 # Dependencies
 
@@ -57,7 +59,11 @@ Add the following command to your .Rprofile.
 
 # Simulations
 
-## Download simulation results data
+## Download or reproduce simulation results
+
+If you would like to download our simulation results and use them to recreate our figures, see Option 1 below. If you would like to start from scratch, see Option 2.
+
+### Option 1: Download simulation results data
 
 Next, we recommend downloading the simulation results data from Dropbox,
 so that you can reproduce the figures without having to rerun the
@@ -75,10 +81,7 @@ Then, execute
 
      unzip -o download.zip
 
-If you would like to rerun the simulations from scratch, do not download
-the results and instead follow the steps in the next section.
-
-## Run the Nextflow pipelines
+### Option 2: Run the Nextflow pipelines
 
 Navigate to the symcrt2-manuscript directory. All scripts below must be
 executed from this directory.
@@ -86,6 +89,41 @@ executed from this directory.
 Also, for the commands below, depending on the limits of your cluster,
 you may need to set the max_gb and max_hours parameters differently. The
 defaults are 7.5 and 4, respectively.
+
+First, for the simulations pertaining to the HMM model for X:
+
+    # tower PCM statistical simulation:
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name split_pcm --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+    # PCM statistical simulation:
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name oat_pcm --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+    # oracle GCM statistical simulation:
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name gcm --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+    # HRT statistical simulation:
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name hrt --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+    # Knockoffs statistical simulation: 
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name knockoff --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+    # tower PCM, PCM, oracle GCM, knockoff computational simulations:
+    qsub code/sim_spec/hmm_interacted_computation/run_all_simulations.sh 
+
+    # HRT computational simulations:
+    qsub code/sim_spec/hmm_interacted_computation/run_one_simulation.sh 800 hrt_mem 1 
+    qsub code/sim_spec/hmm_interacted_computation/run_one_simulation.sh 900 hrt_mem 1  
+    qsub code/sim_spec/hmm_interacted_computation/run_one_simulation.sh 1000 hrt_mem 1 
+    qsub code/sim_spec/hmm_interacted_computation/run_one_simulation.sh 1100 hrt_mem 1 
+    qsub code/sim_spec/hmm_interacted_computation/run_one_simulation.sh 1200 hrt_mem 1  
+
+    # Choosing proportion simulations:
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name split_pcm_stat_manu --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name split_pcm_proportions --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name oat_pcm_stat_manu --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+    echo "bash code/run_simulation_pipeline_updated.sh --sim_name oat_pcm_proportions --sim_folder_name hmm_interacted_fdr" | qsub -N run_all
+
+Next, for the simulations pertaining to the Gaussian model for X:
 
     # tower PCM statistical simulation:
     echo "bash code/run_simulation_pipeline.sh --sim_name split_pcm_stat_manu" | qsub -N run_all
@@ -115,14 +153,14 @@ Before creating the figures, please ensure that your working directory
 is set to symcrt2-manuscript. The figures are placed in the
 manuscript/figures directory.
 
-    # Figure 1
-    Rscript figures_code/plot_figure_1.R
+    # Figures pertaining to the HMM model for X:
+    Rscript figures_code/plot_hmm_simulations.R
 
-    # Figures 2,3,4.
-    Rscript figures_code/plot_stat_figures.R
+    # Figure 5 (computational comparison):
+    Rscript figures_code/plot_computational_comparison.R
 
-    # Choosing the splitting proportion (Figures 5-8 in the Appendix)
-    Rscript figures_code/plot_choose_proportions.R
+    # Figures pertaining to the Gaussian model for X:
+    Rscript figures_code/plot_gaussian_simulations.R
 
 # Real data analysis
 
@@ -153,20 +191,25 @@ executed from this directory.
 ## Run the analyses
 
     # tower PCM
-    qsub data_analysis/run_r_script.sh data_analysis/split_pcm_da_manu.R
+    Rscript data_analysis/random_forest_binary_fdr/split_pcm.R 
 
     # tower GCM
-    qsub data_analysis/run_r_script.sh data_analysis/gcm_da_manu.R
+    Rscript data_analysis/random_forest_binary_fdr/gcm.R 
 
     # HRT
-    qsub data_analysis/run_r_script.sh data_analysis/hrt_da_manu_035.R
+    # Run on cluster
+    qsub data_analysis/random_forest_binary_fdr/run_one_hrt.sh data_analysis/random_forest_binary_fdr/run_one_hrt.R
 
     # PCM
-    qsub data_analysis/run_r_script.sh data_analysis/oat_pcm_da_manu_035.R
+    Rscript data_analysis/random_forest_binary_fdr/oat_pcm.R 
 
-## Make the results table
+    # Knockoffs
+    Rscript data_analysis/random_forest_binary_fdr/knockoff.R 
 
-    Rscript data_analysis/construct_results_table.R
+## Make the figure
+
+    # Figure 6
+    Rscript figures_code/plot_data_analysis.R
 
 # Acknowledgments
 

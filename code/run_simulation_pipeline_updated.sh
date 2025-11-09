@@ -12,6 +12,10 @@
 #              code/sim_spec. Note that the simulatr specifier file must already
 #              have been created before running this script. I recommend doing so
 #              using run_simulation_local.R with check = TRUE.
+# - sim_folder_name:  (Required) The name of the folder under 
+#              code/sim_spec. Note that the simulatr specifier file must already
+#              have been created before running this script. I recommend doing so
+#              using run_simulation_local.R with check = TRUE.
 # - profile:   (Optional) The Nextflow profile to use on HPCC. The three options
 #              are "local", "standard"", and "aws". The "local" option is for 
 #.             running the simulation interactively, and primarily useful for 
@@ -36,11 +40,12 @@
 # OUTPUT: 
 # 
 # - The results of the simulation will be written to 
-#   LOCAL_SYMCRT2_DATA_DIR/private/results/<sim_name>/<sim_name>_results.rds.
+#   LOCAL_SYMCRT2_DATA_DIR/private/results/<sim_folder_name>/<sim_name>/<sim_name>_results.rds.
 #######################################################################
 
 # 0. Read simulation parameters from command line
 # sim_name=        # Name of the simulation (no default)
+# sim_folder_name=        # Name of the simulation (no default)
 profile="standard" # Nextflow profile (default standard)
 B_check=3          # Number of replicates to use for benchmarking (default 3)
 B=0                # Number of replicates for main simulation (default read from sim spec obj)
@@ -61,6 +66,12 @@ if [ -z "$sim_name" ]; then
   exit
 fi
 
+if [ -z "$sim_folder_name" ]; then
+  echo "Error: The simulation folder name needs to be given via the\
+ command-line argument sim_folder_name."
+  exit
+fi
+
 echo "Launching the "$sim_name" simulation with profile = "$profile", B_check = "\
 $B_check", B = "$B", max_gb = "$max_gb", max_hours = "$max_hours"..."
 
@@ -70,14 +81,14 @@ if [ -z "$NXF_WORK" ]; then
   echo "Error: The environment variable \$NXF_WORK needs to be set"
   exit
 fi
-simspec_filename=$LOCAL_CODE_DIR/code/sim_spec/sim_spec_$sim_name.rds
+simspec_filename=$LOCAL_CODE_DIR/symcrt2-project/code/sim_spec/$sim_folder_name/sim_spec_$sim_name.rds
 if [ -z "$simspec_filename" ]; then
   echo "Error: The simulatr specifier object was not found."
   exit
 fi
 
 # output_dir=$LOCAL_CODE_DIR/symcrt2-project/results/$sim_name
-output_dir=$LOCAL_SYMCRT2_DATA_DIR/private/results/$sim_name
+output_dir=$LOCAL_SYMCRT2_DATA_DIR/private/results/$sim_folder_name/$sim_name
 mkdir -p $output_dir
 
 # 2. Set up R packages
